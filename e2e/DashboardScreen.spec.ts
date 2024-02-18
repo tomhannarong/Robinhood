@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
 
 test("dashboard screen render is correctly", async ({ page }) => {
-  const username = "user1";
-  const password = "123";
+  const username = "sivensyM";
+  const password = "QntaH3bw250h";
   const urlAuth = "http://localhost:3000/auth/login";
   await page.goto(urlAuth);
   await page.getByTestId("username").click();
