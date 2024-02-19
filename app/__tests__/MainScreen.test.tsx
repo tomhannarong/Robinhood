@@ -5,11 +5,12 @@ import MainScreen from "@/app/components/MainScreen";
 
 describe("MainScreen component", () => {
   // Mock generateMockTasks function
-  jest.mock("../services/mockData.ts", () => ({
-    generateMockTasks: jest.fn((status, count) => {
+  jest.mock("../services/todoList.ts", () => ({
+    handleTodoList: jest.fn((status, count) => {
       return Array.from({ length: count }, (_, index) => ({
         id: `${status}-${index + 1}`,
         title: `Task ${index + 1}`,
+        description: `description ${index + 1}`,
         status,
       }));
     }),
@@ -18,7 +19,7 @@ describe("MainScreen component", () => {
   it("renders tabs correctly", () => {
     const { getByText } = render(<MainScreen />);
 
-    expect(getByText("Todo")).toBeInTheDocument();
+    expect(getByText("To-do")).toBeInTheDocument();
     expect(getByText("Doing")).toBeInTheDocument();
     expect(getByText("Done")).toBeInTheDocument();
   });
@@ -29,20 +30,22 @@ describe("MainScreen component", () => {
 
     fireEvent.click(doingTab);
 
-    expect(doingTab).toHaveClass("bg-blue-500");
-    expect(getByTestId("list-doing")).toBeInTheDocument();
-    expect(getByTestId("list-doing")).toBeDefined();
+    expect(doingTab).toHaveClass(
+      "bg-gradient-to-r from-indigo-400 to-cyan-400"
+    );
+    expect(getByTestId("list-DOING")).toBeInTheDocument();
+    expect(getByTestId("list-DOING")).toBeDefined();
   });
 
   it("changes active tab when tab button Todo is clicked", async () => {
     const { getByText, getByTestId } = render(<MainScreen />);
-    const todoTab = getByText("Todo");
+    const todoTab = getByText("To-do");
 
     fireEvent.click(todoTab);
 
-    expect(todoTab).toHaveClass("bg-blue-500");
-    expect(getByTestId("list-todo")).toBeInTheDocument();
-    expect(getByTestId("list-todo")).toBeDefined();
+    expect(todoTab).toHaveClass("bg-gradient-to-r from-indigo-400 to-cyan-400");
+    expect(getByTestId("list-TODO")).toBeInTheDocument();
+    expect(getByTestId("list-TODO")).toBeDefined();
   });
 
   it("changes active tab when tab button Done is clicked", async () => {
@@ -51,9 +54,9 @@ describe("MainScreen component", () => {
 
     fireEvent.click(doneTab);
 
-    expect(doneTab).toHaveClass("bg-blue-500");
-    expect(getByTestId("list-done")).toBeInTheDocument();
-    expect(getByTestId("list-done")).toBeDefined();
+    expect(doneTab).toHaveClass("bg-gradient-to-r from-indigo-400 to-cyan-400");
+    expect(getByTestId("list-DONE")).toBeInTheDocument();
+    expect(getByTestId("list-DONE")).toBeDefined();
   });
 
   it("displays tasks for the active tab", async () => {

@@ -1,16 +1,32 @@
+export interface TodoListRequest {
+  offset: number;
+  limit: number;
+  sortBy: string;
+  isAsc: boolean;
+  status?: string;
+}
+export interface TodoListResponse {
+  tasks: Task[];
+  pageNumber: number;
+  totalPages: number;
+}
+
 export interface Task {
   id: string;
   title: string;
-  status: "todo" | "doing" | "done";
-  createdDate: Date;
+  description: string;
+  createdAt: string;
+  status: string;
 }
 
-export type Status = "todo" | "doing" | "done";
+export type Status = "TODO" | "DOING" | "DONE";
 
 export interface StopLoadMore {
-  todo: boolean;
-  doing: boolean;
-  done: boolean;
+  [key: string]: boolean;
+}
+
+export interface OffsetTask {
+  [key: string]: number;
 }
 
 export interface User {

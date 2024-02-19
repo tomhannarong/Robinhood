@@ -2,124 +2,169 @@
 
 import React, { useEffect, useState } from "react";
 import TaskList from "./TaskList";
-import generateMockTasks from "../services/mockData";
-import { Status, StopLoadMore, Task } from "../types";
+import { OffsetTask, Status, StopLoadMore, Task } from "../types";
+import handleTodoList from "../services/todoList";
 
 interface Props {}
 const MainScreen: React.FC<Props> = ({}) => {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [activeTab, setActiveTab] = useState<Status>("todo");
-  const maxFetchData = 40;
-  const itemPerTable = 10;
-  const itemPerLoadMore = 10;
-  const statusTab: Status[] = ["todo", "doing", "done"];
+  const [newTasks, setNewTasks] = useState<Task[]>([]);
+  const [activeTab, setActiveTab] = useState<Status>("TODO");
+  const statusTab: Status[] = ["TODO", "DOING", "DONE"];
   const [stopLoadMore, setStopLoadMore] = useState<StopLoadMore>({
     todo: false,
     doing: false,
     done: false,
   });
+  const [offsets, setOffsets] = useState<OffsetTask>({
+    todo: 0,
+    doing: 0,
+    done: 0,
+  });
+  const limit = 10; // Limit of tasks per page
 
-  useEffect(() => {
-    const todoTasks = generateMockTasks("todo", itemPerTable);
-    const doingTasks = generateMockTasks("doing", itemPerTable);
-    const doneTasks = generateMockTasks("done", itemPerTable);
-
-    setTasks([...todoTasks, ...doingTasks, ...doneTasks]);
-  }, []);
-
-  const handleDelete = (id: string) => {
-    setTasks((prevTasks) => prevTasks.filter((task) => task.id !== id));
+  const getTodoList = async (status: Status, offset: number = 0) => {
+    const todoList = await handleTodoList({
+      isAsc: true,
+      limit,
+      offset,
+      sortBy: "createdAt",
+      status,
+    });
+    if (todoList) {
+      return todoList.tasks;
+    }
+    return [];
   };
 
-  const visibleTasks = tasks.filter((task) => task.status === activeTab);
+  useEffect(() => {
+    handleSetNewTasksAll();
+  }, []);
 
-  const loadMoreTasks = (status: Status) => {
-    let moreTasks: Task[] = [];
-    switch (status) {
-      case "todo": {
-        const todoLength = visibleTasks.length;
-        if (todoLength >= maxFetchData || stopLoadMore[status]) {
-          setStopLoadMore((prev) => ({ ...prev, todo: true }));
-          break;
-        }
-        moreTasks = generateMockTasks("todo", itemPerLoadMore);
-        setTasks((prevTasks) => [...prevTasks, ...moreTasks]);
-        break;
-      }
-      case "doing": {
-        const doingLength = visibleTasks.length;
-        if (doingLength >= maxFetchData || stopLoadMore[status]) {
-          setStopLoadMore((prev) => ({ ...prev, doing: true }));
-          break;
-        }
-        moreTasks = generateMockTasks("doing", itemPerLoadMore);
-        setTasks((prevTasks) => [...prevTasks, ...moreTasks]);
-        break;
-      }
-      case "done": {
-        const doneLength = visibleTasks.length;
-        if (doneLength >= maxFetchData || stopLoadMore[status]) {
-          setStopLoadMore((prev) => ({ ...prev, done: true }));
-          break;
-        }
-        moreTasks = generateMockTasks("done", itemPerLoadMore);
-        setTasks((prevTasks) => [...prevTasks, ...moreTasks]);
-        break;
-      }
-      default:
-        break;
+  const handleSetNewTasksAll = async () => {
+    const todoTasks = await getTodoList("TODO", 0);
+    const doingTasks = await getTodoList("DOING", 0);
+    const doneTasks = await getTodoList("DONE", 0);
+    setNewTasks([...todoTasks, ...doingTasks, ...doneTasks]);
+  };
+
+  const handleDelete = (id: string) => {
+    setNewTasks((prevTasks) => prevTasks.filter((task) => task.id !== id));
+  };
+
+  const visibleTasks = newTasks.filter((task) => task.status === activeTab);
+
+  const loadMoreTasks = async (status: Status) => {
+    const nextOffset = offsets[status.toLowerCase()] + 1;
+    if (stopLoadMore[status.toLowerCase()]) {
+      setStopLoadMore((prev) => ({
+        ...prev,
+        [status.toLowerCase()]: true,
+      }));
+    }
+    const tasks = await getTodoList(activeTab, nextOffset);
+    if (!tasks.length) {
+      setStopLoadMore((prev) => ({
+        ...prev,
+        [status.toLowerCase()]: true,
+      }));
+    } else {
+      setNewTasks((prevTasks) => [...prevTasks, ...tasks]);
     }
   };
 
-  const handleTabChange = (tab: Status) => {
+  function setOffsetsTask(status: Status): void {
+    const newOffset = offsets[status.toLowerCase()] + 1;
+    setOffsets((prevOffsets) => ({
+      ...prevOffsets,
+      [status.toLowerCase()]: newOffset,
+    }));
+  }
+  function handleTabChange(tab: Status): void {
     setActiveTab(tab);
-  };
+  }
 
   return (
     <div className="container mx-auto p-4">
-      <div className="grid grid-cols-3 gap-4 justify-center mb-4 ">
-        {statusTab.map((tab) => (
-          <button
-            key={tab}
-            className={`py-2 px-4 rounded-lg ${
-              activeTab === tab
-                ? "bg-blue-500 text-white"
-                : "bg-gray-200 text-gray-800"
-            }`}
-            onClick={() => handleTabChange(tab)}
+      <div className="">
+        <div className="flex flex-wrap items-center justify-center">
+          <div
+            id="header"
+            className="grid grid-cols-1 justify-center lg:w-2/4 w-full lg:px-10 px-6 mb-10 bg-indigo-100 rounded-b-[60px]"
           >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-          </button>
-        ))}
+            <div id="tabs" className="flex justify-end py-10 pt-6">
+              <div
+                id="avatar"
+                className="w-20 h-20 rounded-full bg-gray-300"
+              ></div>
+            </div>
+
+            <div id="description" className="lg:px-5">
+              <h1 className="text-4xl font-bold text-gray-500">Hi! User</h1>
+              <p className="text-xl font-bold text-gray-500 py-2 pt-3">
+                This is just a simple UI.
+              </p>
+              <p className="text-xl font-bold text-gray-500 pb-5">
+                Open to create your style :D
+              </p>
+            </div>
+            <div className="relative h-[80px]">
+              <div className="absolute -bottom-10 mb-4 z-50 w-full">
+                <div
+                  id="tabs"
+                  className="grid grid-cols-3 gap-4 justify-center p-3 px-6 bg-gray-100 rounded-full"
+                >
+                  {statusTab.map((tab) => (
+                    <button
+                      key={tab}
+                      className={`py-2 rounded-2xl text-lg hover:font-bold ${
+                        tab === activeTab
+                          ? "bg-gradient-to-r from-indigo-400 to-cyan-400 text-white shadow-xl  "
+                          : "bg-gray-100 text-gray-400"
+                      }`}
+                      onClick={() => handleTabChange(tab)}
+                    >
+                      {tab === "TODO" && "To-do"}
+                      {tab === "DOING" && "Doing"}
+                      {tab === "DONE" && "Done"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="flex flex-wrap justify-center">
-        <div key={activeTab} className="lg:w-3/4 w-full  px-2 mb-4">
-          {activeTab === "todo" && (
+        <div key={activeTab} className="lg:w-2/4 w-full  px-2 mb-4">
+          {activeTab === "TODO" && (
             <TaskList
               tasks={visibleTasks}
               onDelete={handleDelete}
-              onLoadMore={() => loadMoreTasks("todo")}
-              status="todo"
+              onLoadMore={() => loadMoreTasks("TODO")}
+              status="TODO"
               stopLoadMore={stopLoadMore}
+              setOffsets={setOffsetsTask}
             />
           )}
-          {activeTab === "doing" && (
+          {activeTab === "DOING" && (
             <TaskList
               tasks={visibleTasks}
               onDelete={handleDelete}
-              onLoadMore={() => loadMoreTasks("doing")}
-              status="doing"
+              onLoadMore={() => loadMoreTasks("DOING")}
+              status="DOING"
               stopLoadMore={stopLoadMore}
+              setOffsets={setOffsetsTask}
             />
           )}
-          {activeTab === "done" && (
+          {activeTab === "DONE" && (
             <TaskList
               tasks={visibleTasks}
               onDelete={handleDelete}
-              onLoadMore={() => loadMoreTasks("done")}
-              status="done"
+              onLoadMore={() => loadMoreTasks("DONE")}
+              status="DONE"
               stopLoadMore={stopLoadMore}
+              setOffsets={setOffsetsTask}
             />
           )}
         </div>

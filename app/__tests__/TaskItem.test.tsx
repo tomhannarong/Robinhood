@@ -4,22 +4,21 @@ import TaskItem from "@/app/components/TaskItem";
 import { Task } from "@/app/types";
 
 const taskMock: Task = {
-  id: "1",
-  title: "Test Task",
-  createdDate: new Date("2024-02-18"),
-  status: "todo",
+  id: "99",
+  title: "Task 99",
+  description: "description 99",
+  createdAt: "2024-02-19T08:00:00Z",
+  status: "doing",
 };
 
 describe("TaskItem component", () => {
   it("renders task details correctly", () => {
     const { getByText } = render(
-      <TaskItem no={1} task={taskMock} onDelete={() => {}} />
+      <TaskItem task={taskMock} onDelete={() => {}} />
     );
 
-    expect(getByText("Test Task")).toBeInTheDocument();
-    expect(getByText("No.")).toBeInTheDocument();
-    expect(getByText("1")).toBeInTheDocument();
-    expect(getByText("Sun Feb 18 2024")).toBeInTheDocument();
+    expect(getByText("Task 99")).toBeInTheDocument();
+    expect(getByText("description 99")).toBeInTheDocument();
   });
 
   it("display button delete when swipe to delete is triggered", async () => {
@@ -27,7 +26,7 @@ describe("TaskItem component", () => {
     const mockOnDelete = jest.fn();
 
     const { getByText } = render(
-      <TaskItem no={1} task={taskMock} onDelete={mockOnDelete} />
+      <TaskItem task={taskMock} onDelete={mockOnDelete} />
     );
 
     const deleteButton = getByText("Delete");
